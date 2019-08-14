@@ -1,0 +1,13 @@
+npm install --save puppeteer-core@1.17.0
+
+
+Chrome与puppeteer映射关系
+https://github.com/GoogleChrome/puppeteer/blob/master/docs/api.md
+
+
+
+https://pptr.dev/
+
+https://github.com/GoogleChrome/puppeteer
+
+https://github.com/GoogleChrome/puppeteer/blob/master/docs/api.md#puppeteer-vs-puppeteer-core
