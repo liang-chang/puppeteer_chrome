@@ -5,14 +5,18 @@ var https = require('https');
 var querystring = require('querystring');
 
 
+
 //---------------------------------------------------------------
 //配置
+let config = require('./config.json');
 
-var CELL_PHONE="";
+console.log(JSON.stringify(config),"\n");
 
-var PASSWORD="";
+var CELL_PHONE=config.cellPhone;
 
-var CHROME_PATH = "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe";
+var PASSWORD=config.password;
+
+var CHROME_PATH = config.chromePath;
 
 var HEADLESS = false;
 
@@ -55,11 +59,11 @@ function login() {
 	var req = https.request(options,(res) => {
 			res.setEncoding('utf8');
 			res.on('data', function (data) {
-				console.log("data:", data); //一段html代码
+				console.log("data:", data,"\n"); //一段html代码				
+				console.log(res.getHeaders());
+				let setCookie = res.getHeader('set-cookie');
+				console.log(setCookie);
 			});
-			//console.log(res.getHeaders());
-			let setCookie = res.getHeader('set-cookie');
-			console.log(setCookie);
 		});
 		
 	req.on('error', function(e) {
