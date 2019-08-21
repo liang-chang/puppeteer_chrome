@@ -57,12 +57,18 @@ function login() {
 	}
 
 	var req = https.request(options,(res) => {
+			res.resume();
 			res.setEncoding('utf8');
-			res.on('data', function (data) {
-				console.log("data:", data,"\n"); //一段html代码				
-				console.log(res.getHeaders());
-				let setCookie = res.getHeader('set-cookie');
-				console.log(setCookie);
+			res.on('end', () => {
+				if (!res.complete){
+					console.error('The connection was terminated while the message was still being sent');
+				}
+				console.log(res.headers);
+				console.log("\n");
+				console.log(res.headers['set-cookie']);
+				console.log("\n");
+				console.log(res.headers['set-cookie'].length);
+				console.log("\n");
 			});
 		});
 		
