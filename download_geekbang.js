@@ -24,7 +24,7 @@ var USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML,
 
 //---------------------------------------------------------------
 
-var cookie = null;
+var COOKIE = null;
 
 function login() {
 
@@ -55,10 +55,13 @@ function login() {
             'Referer': 'https://account.geekbang.org/login?redirect=https%3A%2F%2Ftime.geekbang.org%2F',
 		}
 	}
+	
+	awat httpRequest(post_data,options);
 
 	var req = https.request(options,(res) => {
 			res.resume();
 			res.setEncoding('utf8');
+			
 			res.on('end', () => {
 				if (!res.complete){
 					console.error('The connection was terminated while the message was still being sent');
@@ -81,6 +84,23 @@ function login() {
 }
 
 login(); 
+
+async function httpRequest(post_data,options) {
+    // 注意返回promise对象
+    return new Promise((resolve, reject) => {
+        const req = http.request(options, (res) => {
+            let ret = '';
+            res.on('data', buffer => { ret += buffer.toString() });
+            res.on('end', () => resolve(res,ret));
+        });
+        req.on('error', (e) => {
+			console.log('problem with request: ' + e.message);
+			reject(e)
+		});
+		req.write(post_data);
+        req.end();
+    });
+};
 
 /* 
 function ttt(){
