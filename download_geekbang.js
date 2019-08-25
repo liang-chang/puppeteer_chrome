@@ -1,8 +1,8 @@
 const puppeteer = require('puppeteer-core');
-var querystring = require('querystring');
-var http = require('http');
-var https = require('https');
-var querystring = require('querystring');
+const querystring = require('querystring');
+const http = require('http');
+const https = require('https');
+const URL = require('url');
 
 
 
@@ -10,7 +10,7 @@ var querystring = require('querystring');
 //配置
 let config = require('./config.json');
 
-console.log(JSON.stringify(config),"\n");
+//console.log(JSON.stringify(config),"\n");
 
 var CELL_PHONE=config.cellPhone;
 
@@ -25,11 +25,57 @@ var USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML,
 //---------------------------------------------------------------
 
 var COOKIE = null;
+var COOKIE = [
+	"GCID=76780f3-b841c9a-9e5dc84-4bef362",
+	"SERVERID=1fa1f330efedec1559b3abbcb6e30f50|1566746768|1566746450",
+	"GCESS=BAEEj7sYAAYE5Fo3JggBAwoEAAAAAAwBAQcEol2TcAQEAC8NAAIE77hiXQkBAQME77hiXQUEAAAAAAsCBAA-"
+];
 
-function login() {
+var COMMON_HEADER = {
+		'User-Agent': USER_AGENT,
+		'Accept': 'application/json, text/plain, */*',
+		'Origin':"https://account.geekbang.org"
+ };
 
-	var url = "https://account.geekbang.org/account/ticket/login";
-	
+async function main(){
+	await loginGetCookie();
+
+	console.log(JSON.stringify(COOKIE));
+
+	await getCourseList();
+}
+
+
+
+async function getCourseList() {
+	let httpsUrl = "https://time.geekbang.org/serv/v1/my/products/all";
+	let url =  URL.parse(httpsUrl);
+
+	var options = {
+		port: 443,
+		method: 'POST',
+		host: url.host,
+		hostname :url.hostname,
+		path: url.path,
+		headers: Object.assign({
+			'Referer': 'https://account.geekbang.org/dashboard/buy',
+			'Cookie':COOKIE.join('; ')
+		},COMMON_HEADER)
+	};
+
+	console.log(JSON.stringify(options.headers))
+
+	let r =  await httpsRequest(options,"");
+
+	console.log(r.data);
+}
+
+async function loginGetCookie() {
+
+	let httpsUrl = "https://account.geekbang.org/account/ticket/login";
+
+	var url =  URL.parse(httpsUrl);
+
 	var post_data = JSON.stringify({
 			"country": 86,
 			"cellphone": CELL_PHONE,
@@ -39,68 +85,56 @@ function login() {
 			"platform": 3,
 			"appid": 1
 		});
-		
-	var options = {
-		host: 'account.geekbang.org',
-		hostname :'account.geekbang.org',
-		port: 443,
-		path: '/account/ticket/login',
-		method: 'POST',
-		headers: {
-			'User-Agent': USER_AGENT,
-            'Accept': 'application/json, text/plain, */*',
-            'Accept-Language': 'zh-CN,zh;q=0.9',
-            'Host': 'account.geekbang.org',
-			'Origin':'https://account.geekbang.org',
-            'Referer': 'https://account.geekbang.org/login?redirect=https%3A%2F%2Ftime.geekbang.org%2F',
-		}
-	}
-	
-	awat httpRequest(post_data,options);
 
-	var req = https.request(options,(res) => {
-			res.resume();
-			res.setEncoding('utf8');
-			
-			res.on('end', () => {
-				if (!res.complete){
-					console.error('The connection was terminated while the message was still being sent');
-				}
-				console.log(res.headers);
-				console.log("\n");
-				console.log(res.headers['set-cookie']);
-				console.log("\n");
-				console.log(res.headers['set-cookie'].length);
-				console.log("\n");
-			});
-		});
-		
-	req.on('error', function(e) {
-		console.log('problem with request: ' + e.message);
-	});
-	
-	req.write(post_data);
-	req.end();
+	var options = {
+		port: 443,
+		method: 'POST',
+		host: url.host,
+		hostname :url.hostname,
+		path: url.path,
+		headers: Object.assign({
+			'Referer': 'https://account.geekbang.org/login?redirect=https%3A%2F%2Ftime.geekbang.org%2F'
+		},COMMON_HEADER)
+	};
+
+	let r =  await httpsRequest(options,post_data);
+
+	var cookie =  r.response.headers['set-cookie'];
+
+	if(cookie == null){
+		console.error("无法登录获取cookie,退出!")
+		process.exit();
+	}
+
+	COOKIE = cookie.map(v => v.split(";")[0].trim());
 }
 
-login(); 
+main();
 
-async function httpRequest(post_data,options) {
+
+function httpsRequest(options,post_data) {
     // 注意返回promise对象
     return new Promise((resolve, reject) => {
-        const req = http.request(options, (res) => {
+        const req = https.request(options, (res) => {
+			res.resume();
             let ret = '';
-            res.on('data', buffer => { ret += buffer.toString() });
-            res.on('end', () => resolve(res,ret));
+            res.on('data', buffer => {ret += buffer.toString()});
+			res.on('end', () => {
+				resolve({response: res, request: ret, data: ret})
+			});
         });
         req.on('error', (e) => {
 			console.log('problem with request: ' + e.message);
 			reject(e)
 		});
-		req.write(post_data);
+        if(post_data!=null||post_data!=''){
+			req.write(post_data);
+		}
         req.end();
     });
-};
+}; 
+
+
 
 /* 
 function ttt(){
@@ -155,3 +189,4 @@ function ttt(){
 	await browser.close();
 })
 //();
+
