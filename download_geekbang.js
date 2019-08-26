@@ -26,7 +26,6 @@ var USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML,
 
 var COOKIE = null;
 
-
 var COMMON_HEADER = {
 		'User-Agent': USER_AGENT,
 		'Accept': 'application/json, text/plain, */*',
@@ -34,11 +33,12 @@ var COMMON_HEADER = {
  };
 
 async function main(){
-	await loginGetCookie();
+	//await loginGetCookie();
 
 	console.log(JSON.stringify(COOKIE));
 
-	await getCourseList();
+	let courseList = await getCourseList();
+
 }
 
 
@@ -63,7 +63,19 @@ async function getCourseList() {
 
 	let r =  await httpsRequest(options,"");
 
-	console.log(r.data);
+	let data = r.data;
+	if(data == null){
+        console.error("无法获取课程信息",r)
+        process.exit();
+    }
+    let dataJson = JSON.parse(data);
+	if(dataJson['error']!=null){
+        console.error("无法获取课程信息",data)
+        process.exit();
+    }
+
+
+
 }
 
 async function loginGetCookie() {
