@@ -25,11 +25,7 @@ var USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML,
 //---------------------------------------------------------------
 
 var COOKIE = null;
-var COOKIE = [
-	"GCID=76780f3-b841c9a-9e5dc84-4bef362",
-	"SERVERID=1fa1f330efedec1559b3abbcb6e30f50|1566746768|1566746450",
-	"GCESS=BAEEj7sYAAYE5Fo3JggBAwoEAAAAAAwBAQcEol2TcAQEAC8NAAIE77hiXQkBAQME77hiXQUEAAAAAAsCBAA-"
-];
+
 
 var COMMON_HEADER = {
 		'User-Agent': USER_AGENT,
