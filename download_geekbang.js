@@ -26,6 +26,7 @@ var USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML,
 
 var COOKIE = null;
 
+
 var COMMON_HEADER = {
 		'User-Agent': USER_AGENT,
 		'Accept': 'application/json, text/plain, */*',
@@ -39,9 +40,45 @@ async function main(){
 
 	let courseList = await getCourseList();
 
+    chooseCourse(courseList);
 }
 
+async function chooseCourse(courseList) {
 
+    let list = await parsetCourseList(courseList);
+
+    console.log("-------------------------------------------");
+    console.log("请输入课程id:");
+    for (item of list){
+        console.log(`[${item.columnId}]【${item.tabName}】【${item.columnTitle} - ${item.columnSubtitle}】 - 【 ${item.authorName} - ${item.authorIntro}】`);
+    }
+}
+
+async function parsetCourseList(courseTabList) {
+    let ret =[];
+
+    let allTabs = courseTabList.data;
+
+    for (let  tab of  allTabs  ) {
+        var tabName = tab.title;
+        for(let course of tab.list ){
+            var courseName = course.title;
+            let listItem = {};
+
+            listItem.tabName=tabName;
+
+            listItem.columnTitle=courseName;
+            listItem.columnSubtitle=course.extra.column_subtitle;
+            listItem.columnId=course.extra.column_id;
+            listItem.authorName=course.extra.author_name;
+            listItem.authorIntro=course.extra.author_intro;
+
+            ret[ret.length] = listItem;
+
+        }
+    }
+    return ret;
+}
 
 async function getCourseList() {
 	let httpsUrl = "https://time.geekbang.org/serv/v1/my/products/all";
@@ -69,13 +106,12 @@ async function getCourseList() {
         process.exit();
     }
     let dataJson = JSON.parse(data);
-	if(dataJson['error']!=null){
+	if(dataJson['code']!=null && dataJson['code'] < 0){
         console.error("无法获取课程信息",data)
         process.exit();
     }
 
-
-
+    return dataJson;
 }
 
 async function loginGetCookie() {
@@ -140,8 +176,7 @@ function httpsRequest(options,post_data) {
 		}
         req.end();
     });
-}; 
-
+};
 
 
 /* 
