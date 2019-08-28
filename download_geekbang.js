@@ -64,11 +64,11 @@ async function main(){
 
         //已选定课程,开始生成PDF文件
 
-        await startCreatePDF(choose[0]);
+        await startDownload(choose[0]);
     }
 }
 
-async function startCreatePDF(course) {
+async function startDownload(course) {
     var allArticles = await getAllArticles(course);
 
     console.log(`共${course.articleCount}篇【${course.columnId}-${course.columnTitle}-${course.columnSubtitle}】`);
@@ -79,10 +79,43 @@ async function startCreatePDF(course) {
         process.exit();
     }
 
-    for(let i=0;i<allArticles.length;i++){
-        console.log(`开始${i}/${course.articleCount}【${course.columnId}-${course.columnTitle}-${course.columnSubtitle}】`);
-        process.exit();
+    let baseUrl="https://time.geekbang.org/column/article/";
+    for(let i=0;i < allArticles.length;i++){
+        let article = allArticles[i];
+
+        console.log(`开始${i+1}/${course.articleCount}【${course.columnId}-${course.columnTitle}-${course.columnSubtitle}】`);
+
+        let openUrl = baseUrl + article.id;
+
+        await savePDF(openUrl,article);
+        console.log(`完成${i+1}/${course.articleCount}【${course.columnId}-${course.columnTitle}-${course.columnSubtitle}】`);
     }
+}
+
+async function savePDF( url , article ) {
+    const browser = await puppeteer.launch({
+        headless: HEADLESS,
+        executablePath: CHROME_PATH
+    });
+
+    const page = await browser.newPage();
+
+    await page.setExtraHTTPHeaders({
+        'Host': 'account.geekbang.org',
+        'Cookie':COOKIE.join('; ')
+    });
+
+    await page.goto(url, {
+        waitUntil: 'networkidle2',
+        // referer: 'https://www.baidu.com'
+    });
+    await page.pdf({
+        path: 'v:/'+article.article_sharetitle+'.pdf',
+        format: 'A4'
+    });
+
+    await browser.close();
+
 }
 
 async function getAllArticles(course) {
