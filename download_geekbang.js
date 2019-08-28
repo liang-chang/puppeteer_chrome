@@ -24,7 +24,9 @@ var USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML,
 
 //---------------------------------------------------------------
 
-var COOKIE = null;
+var COOKIE = config.cookie != null && Array.isArray(config.cookie) && config.cookie.length > 0
+    ? config.cookie
+    : null;
 
 
 var COMMON_HEADER = {
