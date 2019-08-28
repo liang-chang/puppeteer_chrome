@@ -36,14 +36,51 @@ var COMMON_HEADER = {
  };
 
 async function main(){
-	await loginGetCookie();
+	//await loginGetCookie();
 
 	console.log(JSON.stringify(COOKIE));
 
-	await getCourseList();
+	let courseList = await getCourseList();
+
+    chooseCourse(courseList);
 }
 
+async function chooseCourse(courseList) {
 
+    let list = await parsetCourseList(courseList);
+
+    console.log("-------------------------------------------");
+    console.log("请输入课程id:");
+    for (item of list){
+        console.log(`[${item.columnId}]【${item.tabName}】【${item.columnTitle} - ${item.columnSubtitle}】 - 【 ${item.authorName} - ${item.authorIntro}】`);
+    }
+}
+
+async function parsetCourseList(courseTabList) {
+    let ret =[];
+
+    let allTabs = courseTabList.data;
+
+    for (let  tab of  allTabs  ) {
+        var tabName = tab.title;
+        for(let course of tab.list ){
+            var courseName = course.title;
+            let listItem = {};
+
+            listItem.tabName=tabName;
+
+            listItem.columnTitle=courseName;
+            listItem.columnSubtitle=course.extra.column_subtitle;
+            listItem.columnId=course.extra.column_id;
+            listItem.authorName=course.extra.author_name;
+            listItem.authorIntro=course.extra.author_intro;
+
+            ret[ret.length] = listItem;
+
+        }
+    }
+    return ret;
+}
 
 async function getCourseList() {
 	let httpsUrl = "https://time.geekbang.org/serv/v1/my/products/all";
@@ -65,7 +102,18 @@ async function getCourseList() {
 
 	let r =  await httpsRequest(options,"");
 
-	console.log(r.data);
+	let data = r.data;
+	if(data == null){
+        console.error("无法获取课程信息",r)
+        process.exit();
+    }
+    let dataJson = JSON.parse(data);
+	if(dataJson['code']!=null && dataJson['code'] < 0){
+        console.error("无法获取课程信息",data)
+        process.exit();
+    }
+
+    return dataJson;
 }
 
 async function loginGetCookie() {
@@ -130,8 +178,7 @@ function httpsRequest(options,post_data) {
 		}
         req.end();
     });
-}; 
-
+};
 
 
 /* 
