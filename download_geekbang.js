@@ -3,7 +3,7 @@ const querystring = require('querystring');
 const http = require('http');
 const https = require('https');
 const URL = require('url');
-
+const readline = require('readline');
 
 
 //---------------------------------------------------------------
@@ -35,6 +35,18 @@ var COMMON_HEADER = {
 		'Origin':"https://account.geekbang.org"
  };
 
+function askQuestion(query) {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+    });
+
+    return new Promise(resolve => rl.question(query, ans => {
+        rl.close();
+        resolve(ans);
+    }))
+}
+
 async function main(){
 	//await loginGetCookie();
 
@@ -42,7 +54,74 @@ async function main(){
 
 	let courseList = await getCourseList();
 
-    chooseCourse(courseList);
+	while (true){
+
+        let choose =  await chooseCourse(courseList);
+
+        if(choose == null || choose.length <= 0 ){
+            continue;
+        }
+
+        //已选定课程,开始生成PDF文件
+
+        await startCreatePDF(choose[0]);
+    }
+}
+
+async function startCreatePDF(course) {
+    var allArticles = await getAllArticles(course);
+
+    console.log(`共${course.articleCount}篇【${course.columnId}-${course.columnTitle}-${course.columnSubtitle}】`);
+
+    allArticles = allArticles.data.list;
+    if(allArticles == null ||allArticles.length <= 0){
+        console.log("没有找到可用文章!");
+        process.exit();
+    }
+
+    for(let i=0;i<allArticles.length;i++){
+        console.log(`开始${i}/${course.articleCount}【${course.columnId}-${course.columnTitle}-${course.columnSubtitle}】`);
+        process.exit();
+    }
+}
+
+async function getAllArticles(course) {
+    let httpsUrl = "https://time.geekbang.org/serv/v1/column/articles";
+    let url =  URL.parse(httpsUrl);
+
+    var options = {
+        port: 443,
+        method: 'POST',
+        host: url.host,
+        hostname :url.hostname,
+        path: url.path,
+        headers: Object.assign({
+            'Origin':'https://time.geekbang.org',
+            'Referer': 'https://time.geekbang.org/column/intro/'+course.columnId,
+            'Content-Type':'application/json',
+            'Cookie':COOKIE.join('; ')
+        },COMMON_HEADER)
+    };
+
+    let data = JSON.parse('{"cid":"","size":500,"prev":0,"order":"earliest","sample":false}');
+
+    data.cid=course.columnId+"";
+
+    let r =  await httpsRequest(options,JSON.stringify(data));
+
+    let resData = r.data;
+    if(resData == null){
+        console.error("无法获取课程信息",r)
+        process.exit();
+    }
+    let dataJson = JSON.parse(resData);
+
+    if(dataJson['code']!=null && dataJson['code'] < 0){
+        console.error("无法获取课程文章信息",resData)
+        process.exit();
+    }
+
+    return dataJson;
 }
 
 async function chooseCourse(courseList) {
@@ -50,10 +129,17 @@ async function chooseCourse(courseList) {
     let list = await parsetCourseList(courseList);
 
     console.log("-------------------------------------------");
-    console.log("请输入课程id:");
     for (item of list){
-        console.log(`[${item.columnId}]【${item.tabName}】【${item.columnTitle} - ${item.columnSubtitle}】 - 【 ${item.authorName} - ${item.authorIntro}】`);
+        console.log(`[${item.columnId}]【${item.tabName}】【${item.columnTitle} - ${item.columnSubtitle}】【${item.articleCount}讲】 - 【 ${item.authorName} - ${item.authorIntro}】`);
     }
+    const ans = await askQuestion("请输入课程id:");
+
+    let pickCourse = list.filter(c => c.columnId == parseInt(ans, 10));
+
+    if(pickCourse == null || pickCourse.length <= 0 ){
+        console.error(`未找到相关课程，请检查课程 id = ${ans} 是否正确！`)
+    }
+    return pickCourse;
 }
 
 async function parsetCourseList(courseTabList) {
@@ -74,6 +160,7 @@ async function parsetCourseList(courseTabList) {
             listItem.columnId=course.extra.column_id;
             listItem.authorName=course.extra.author_name;
             listItem.authorIntro=course.extra.author_intro;
+            listItem.articleCount=course.extra.article_count;
 
             ret[ret.length] = listItem;
 
