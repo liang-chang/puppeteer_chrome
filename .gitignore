@@ -1,7 +1,9 @@
-/.idea/.gitignore
-/.idea/inspectionProfiles/Project_Default.xml
-/.idea/jsLibraryMappings.xml
-/.idea/misc.xml
-/.idea/modules.xml
-/.idea/puppeteer_chrome.iml
 /.idea/vcs.xml
+/.idea/misc.xml
+/.idea/.gitignore
+/.idea/modules.xml
+/.idea/encodings.xml
+/.idea/workspace.xml
+/.idea/puppeteer_chrome.iml
+/.idea/jsLibraryMappings.xml
+/.idea/inspectionProfiles/Project_Default.xml
