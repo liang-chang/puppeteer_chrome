@@ -49,7 +49,9 @@ function askQuestion(query) {
 }
 
 async function main() {
-    //await loginGetCookie();
+    if(COOKIE != null){
+        await loginGetCookie();
+    }
 
     console.log(JSON.stringify(COOKIE));
 
