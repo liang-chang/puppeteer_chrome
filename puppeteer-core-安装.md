@@ -1,4 +1,7 @@
 npm install --save puppeteer-core@1.17.0
+npm i   --save  log-timestamp@0.3.0
+npm i   --save  cookie@0.4.0
+
 
 
 Chrome与puppeteer映射关系      
