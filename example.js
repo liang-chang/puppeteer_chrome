@@ -1,10 +1,11 @@
-//const puppeteer = require('puppeteer');
 const puppeteer = require('puppeteer-core');
+const scrollPageToBottom = require("puppeteer-autoscroll-down")
 require('log-timestamp');
 
 
 
-(async() => {
+async function  main() {
+
 
     let config = require('./config.json');
 
@@ -22,7 +23,9 @@ require('log-timestamp');
     await page.setUserAgent("Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36");
 
     let onRequestPromise = new Promise((resolve, reject)=>{
+        // page.once('request', (request) => {
         page.once('request', (request) => {
+            console.log(request.url());
             resolve(request);
         });
     });
@@ -32,8 +35,6 @@ require('log-timestamp');
             resolve(response);
         });
     });
-
-
 
     await page.setCookie(...COOKIE);
 
@@ -52,22 +53,75 @@ require('log-timestamp');
 
     var name = new Date().getTime();
 
-    console.log(`generate screenshot`);
-
-
     // await page.screenshot({
     // 	path: 'v:/'+name+'.png'
     // });
 
+    await pageModification(page);
+
     console.log(`generate pdf`);
 
-    await page.pdf({path: 'v:/'+new Date().getTime()+'.pdf', format: 'A4'});
+    await page.pdf({
+        path: 'v:/' + new Date().getTime() + '.pdf',
+        displayHeaderFooter:true,
+        headerTemplate:`date  -   title   -   url  pageNumber/totalPages `,
+        footerTemplate:`date  -   title   -   url  pageNumber/totalPages `,
+        margin: {
+            top: '15px',
+            bottom: '30px',
+            right: '20px',
+            left: '20px'
+        },
+        format: 'A4'});
 
     console.log(`browse close`);
 
-    setTimeout(()=>{
-        console.log("close------")
-        browser.close();
-    },0);
+    browser.close();
+}
 
-})();
+main();
+
+async function  pageModification(page) {
+
+    await loadAllComment(page);
+
+    //删除header
+    await retmoveHeader(page);
+
+}
+
+async function loadAllComment(page) {
+    var lastPosition = -1;
+
+    var log =  (request) => {
+        console.log(request.url());
+    };
+
+    page.on('request', log);
+
+    while(true){
+        var r = await scrollPageToBottom(page);
+        if(r == lastPosition){
+            break;
+        }
+        lastPosition = r;
+    }
+
+    page.removeListener('request',log);
+}
+
+async function  retmoveHeader(page) {
+    let selector="._352wsGxH_0";
+    let r = await page.evaluate((selector) => {
+        let doms = document.querySelectorAll(selector);
+        let ret = doms.length || 0;
+        for(let i=0;i < doms.length; i++){
+            doms[i].parentElement.remove();
+        }
+        return ret;
+    },selector);
+
+    if(r <=0 ){
+        console.warn("没有找到顶部banner!");
+    }
+}
