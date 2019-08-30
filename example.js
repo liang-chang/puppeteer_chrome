@@ -39,7 +39,7 @@ async function  main() {
     await page.setCookie(...COOKIE);
 
 	await page.goto('https://time.geekbang.org/column/article/69236',{
-        waitUntil: ["networkidle2"],
+        waitUntil: ["networkidle0"],
         // referer: 'https://time.geekbang.org/'
     });
 
