@@ -39,7 +39,7 @@ async function  main() {
     await page.setCookie(...COOKIE);
 
 	await page.goto('https://time.geekbang.org/column/article/69236',{
-        waitUntil: ["load" ,"domcontentloaded" ,"networkidle0" ,"networkidle2"],
+        waitUntil: ["networkidle2"],
         // referer: 'https://time.geekbang.org/'
     });
 
@@ -94,13 +94,16 @@ async function loadAllComment(page) {
     var lastPosition = -1;
 
     var log =  (request) => {
-        console.log(request.url());
+        if(request.url().indexOf("comments")>=0){
+            console.log(request.url());
+        }
     };
 
     page.on('request', log);
 
     while(true){
-        var r = await scrollPageToBottom(page);
+        var r = await scrollPageToBottom(page,5000,100);
+        console.log(`@${r}`)
         if(r == lastPosition){
             break;
         }
