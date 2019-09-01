@@ -3,6 +3,8 @@ npm i   --save  log-timestamp@0.3.0
 npm i   --save  cookie@0.4.0
 npm i   --save puppeteer-autoscroll-down@0.1.2
 
+npm install --save set-cookie-parser@2.4.0
+
 
 
 Chrome与puppeteer映射关系      

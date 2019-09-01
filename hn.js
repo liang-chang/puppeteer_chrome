@@ -1,15 +1,7 @@
 const puppeteer = require('puppeteer-core');
 
 (async() => {
-    var a="test";
+    var a="014count(*)这么慢，我该怎么办？ ? * : \" < > \\ / |  .pdf";
 
-	var s=`${a} hello world!`;
-
-	console.log(s);
-
-    var a="test2";
-
-    var s=`${a} hello world!`;
-
-    console.log(s);
+    console.log(a.replace(/[?*:"<>\\\/|]/g, "").trim());
 })();

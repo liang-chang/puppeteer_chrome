@@ -1,15 +1,15 @@
 const URL = require('url');
 const http = require('http');
 const https = require('https');
-const cookie = require('cookie');
 const readline = require('readline');
-const puppeteer = require('puppeteer-core');
 const querystring = require('querystring');
+const fs = require('fs');
+const setCookie = require('set-cookie-parser');
 const chromeHeadlessPDF = require("./chromeHeadlessPDF.js");
 
 //---------------------------------------------------------------
 //配置
-let config = require('./config.json');
+const config = require('./config.json');
 
 //console.log(JSON.stringify(config),"\n");
 
@@ -82,6 +82,12 @@ async function startDownload(course) {
         process.exit();
     }
 
+    let dir = config.downloadDirectory + filterSpecialChar(`${course.columnTitle}-${course.columnSubtitle}`);
+
+    if (!fs.existsSync(dir)){
+        fs.mkdirSync(dir);
+    }
+
     let baseUrl = "https://time.geekbang.org/column/article/";
     for (let i = 0; i < allArticles.length; i++) {
         let article = allArticles[i];
@@ -90,8 +96,14 @@ async function startDownload(course) {
 
         let openUrl = baseUrl + article.id;
 
-        // await chromeHeadlessPDF.generate();
-        // await savePDF(openUrl,article);
+        let filname =dir + "/" + filterSpecialChar(pad(i,3)+"."+(article.article_sharetitle||article.article_title))+".pdf";
+
+        if (fs.existsSync(filname)) {
+            console.log(`${filname} 已存在,跳过`);
+            continue;
+        }
+
+        await chromeHeadlessPDF.generate(openUrl,filname,COOKIE);
 
         console.log(`完成${i + 1}/${course.articleCount}【${course.columnId}-${course.columnTitle}-${course.columnSubtitle}】`);
     }
@@ -244,14 +256,16 @@ async function loginGetCookie() {
 
     let r = await httpsRequest(options, post_data);
 
-    var cookie = r.response.headers['set-cookie'];
+    var cookieHeader = r.response.headers['set-cookie'];
 
-    if (cookie == null) {
+    if (cookieHeader == null || cookieHeader.length <= 0 ) {
         console.error("无法登录获取cookie,退出!")
         process.exit();
     }
 
-    COOKIE = cookie.map(v => v.split(";")[0].trim());
+    console.log(cookieHeader);
+    COOKIE = setCookie.parse (r.response);
+
 }
 
 main();
@@ -283,8 +297,18 @@ function httpsRequest(options, post_data) {
 
 function getCookieHeaderValue(cookies) {
     let ret = [];
-    for (let cookie of cookies) {
-        ret[ret.length] = cookie.name + "="+cookie.value;
+    for (let c of cookies) {
+        ret[ret.length] = c.name + "="+c.value;
     }
     return ret.join('; ');
+}
+
+function pad(n, width, z) {
+    z = z || '0';
+    n = n + '';
+    return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
+
+function filterSpecialChar(s) {
+    return s.replace(/[?*:"<>\\\/|]/g, "");
 }

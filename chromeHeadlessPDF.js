@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer-core');
 const scrollPageToBottom = require("puppeteer-autoscroll-down")
-require('log-timestamp');
+// require('log-timestamp');
 
 let config = require('./config.json');
 
