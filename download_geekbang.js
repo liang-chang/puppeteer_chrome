@@ -5,7 +5,7 @@ const cookie = require('cookie');
 const readline = require('readline');
 const puppeteer = require('puppeteer-core');
 const querystring = require('querystring');
-
+const chromeHeadlessPDF = require("./chromeHeadlessPDF.js");
 
 //---------------------------------------------------------------
 //配置
@@ -49,7 +49,7 @@ function askQuestion(query) {
 }
 
 async function main() {
-    if(COOKIE != null){
+    if(COOKIE == null || COOKIE.length <= 0){
         await loginGetCookie();
     }
 
@@ -90,35 +90,11 @@ async function startDownload(course) {
 
         let openUrl = baseUrl + article.id;
 
+        // await chromeHeadlessPDF.generate();
         // await savePDF(openUrl,article);
+
         console.log(`完成${i + 1}/${course.articleCount}【${course.columnId}-${course.columnTitle}-${course.columnSubtitle}】`);
     }
-}
-
-async function savePDF(url, article) {
-    const browser = await puppeteer.launch({
-        headless: HEADLESS,
-        executablePath: CHROME_PATH
-    });
-
-    const page = await browser.newPage();
-
-    await page.setExtraHTTPHeaders({
-        'Host': 'account.geekbang.org',
-        'Cookie': getCookieHeaderValue(COOKIE)
-    });
-
-    await page.goto(url, {
-        waitUntil: 'networkidle2',
-        // referer: 'https://www.baidu.com'
-    });
-    await page.pdf({
-        path: 'v:/' + article.article_sharetitle + '.pdf',
-        format: 'A4'
-    });
-
-    await browser.close();
-
 }
 
 async function getAllArticles(course) {
@@ -312,58 +288,3 @@ function getCookieHeaderValue(cookies) {
     }
     return ret.join('; ');
 }
-
-/* 
-function ttt(){
-	const browser = await puppeteer.launch({
-		headless: HEADLESS,
-		executablePath: CHROME_PATH
-	});
-	
-	const page = await browser.newPage();
-
-	await page.setExtraHTTPHeaders({
-		'Host': 'account.geekbang.org',
-		referer: 'https://time.geekbang.org/'
-	});
-
-	await page.goto('https://account.geekbang.org/login?redirect=https%3A%2F%2Ftime.geekbang.org%2F', {
-		waitUntil: 'networkidle2',
-		referer: 'https://time.geekbang.org/'
-	});
-
-	await page.pdf({
-		path: 'hn.pdf',
-		format: 'A4'
-	});
-
-	await browser.close();	
-}
-*/
-
-(async () => {
-
-    const browser = await puppeteer.launch({
-        headless: HEADLESS,
-        executablePath: CHROME_PATH
-    });
-
-    const page = await browser.newPage();
-
-    await page.setExtraHTTPHeaders({
-        'Host': 'account.geekbang.org',
-    });
-
-    await page.goto('https://account.geekbang.org/login?redirect=https%3A%2F%2Ftime.geekbang.org%2F', {
-        waitUntil: 'networkidle2',
-        referer: 'https://time.geekbang.org/'
-    });
-    await page.pdf({
-        path: 'hn.pdf',
-        format: 'A4'
-    });
-
-    await browser.close();
-})
-//();
-
