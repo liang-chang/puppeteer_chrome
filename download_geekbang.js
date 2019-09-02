@@ -88,6 +88,8 @@ async function startDownload(course) {
         fs.mkdirSync(dir);
     }
 
+    let errorCount=0;
+
     let baseUrl = "https://time.geekbang.org/column/article/";
     for (let i = 0; i < allArticles.length; i++) {
         let article = allArticles[i];
@@ -103,9 +105,21 @@ async function startDownload(course) {
             continue;
         }
 
-        await chromeHeadlessPDF.generate(openUrl,filname,COOKIE);
+        try {
+            await chromeHeadlessPDF.generate(openUrl,filname,COOKIE);
+        }catch (e) {
+            console.error("出错了,"+filname,e)
+            errorCount++;
+        }
 
         console.log(`完成${i + 1}/${course.articleCount}【${course.columnId}-${course.columnTitle}-${course.columnSubtitle}】`);
+
+        let waitSecond=5;
+        console.log(`等待 ${waitSecond} 秒`);
+        await sleep(waitSecond * 1000);
+    }
+    if(errorCount > 0 ){
+        console.log(`最后出错了 ${errorCount}`);
     }
 }
 
@@ -276,6 +290,7 @@ function httpsRequest(options, post_data) {
     return new Promise((resolve, reject) => {
         const req = https.request(options, (res) => {
             res.resume();
+            res.setEncoding('utf8');
             let ret = '';
             res.on('data', buffer => {
                 ret += buffer.toString()
@@ -311,4 +326,8 @@ function pad(n, width, z) {
 
 function filterSpecialChar(s) {
     return s.replace(/[?*:"<>\\\/|]/g, "");
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }

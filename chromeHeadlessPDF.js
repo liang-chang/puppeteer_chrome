@@ -44,6 +44,7 @@ async function generate(url,pdfPathName,cookie=[],) {
     console.log(`请求 ${url}`);
 
     await page.goto(url, {
+        timeout:60000,
         waitUntil: ["networkidle0"],
     });
 
